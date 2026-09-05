@@ -1,21 +1,12 @@
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
-from django.contrib.auth import get_user_model, authenticate
-from django.dispatch import receiver
-from rest_framework import status
-from rest_framework.viewsets import ViewSet, ModelViewSet
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from django.contrib.auth import get_user_model
+from rest_framework import status, viewsets
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django_rest_passwordreset.signals import reset_password_token_created, post_password_reset  # type: ignore
 from knox.models import AuthToken  # type: ignore
-from datetime import datetime
-import os
-User = get_user_model()
 
 from .serializers import LoginSerializer, RegisterSerializer, UserSerializer
-
+User = get_user_model()
 
 # def send_email(subject, template, user, btnLink=""):
 #     context = {
@@ -52,7 +43,7 @@ from .serializers import LoginSerializer, RegisterSerializer, UserSerializer
 #                'email/password_changed.html', kwargs['user'], 'DO LATER')
 
 # Create your views here.
-class LoginViewSet(ViewSet):
+class LoginViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
     serializer_class = LoginSerializer
 
@@ -60,14 +51,15 @@ class LoginViewSet(ViewSet):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         if serializer.is_valid():
             user = serializer.validated_data['user']
-            token = AuthToken.objects.create(user)[1]
+            _, token = AuthToken.objects.create(user)
             return Response({
                 'user': UserSerializer(user).data, 
                 'token': token
             }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-class RegisterViewSet(ViewSet):
+
+
+class RegisterViewSet(viewsets.ViewSet):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
@@ -75,24 +67,28 @@ class RegisterViewSet(ViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        else:
-            return Response(serializer.errors, status=400)
+            user = serializer.save()
+            _, token = AuthToken.objects.create(user)
+            return Response({
+                'user': UserSerializer(user).data,
+                'token': token
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UsersViewSet(ModelViewSet):
+class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [AllowAny] # For testing purposes, change that in production [DO LATER]
+    permission_classes = [IsAuthenticated]
 
-    @action(detail=False, methods=['get', 'patch', 'put'])
+    @action(detail=False, methods=['get', 'patch', 'put'], permission_classes=[IsAuthenticated])
     def current(self, request):
         if request.method in ['PATCH', 'PUT']:
-            serializer = UserSerializer(request.user, data=request.data, partial=True)
+            serializer = self.get_serializer(request.user, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        serializer = UserSerializer(request.user)
+            
+        serializer = self.get_serializer(request.user)
         return Response(serializer.data)

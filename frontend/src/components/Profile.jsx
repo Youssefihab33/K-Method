@@ -16,7 +16,7 @@ export default function Profile() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
 
-    useTitle('Profile - Kenzy Project');
+    useTitle('Profile - K-Method');
 
     const handleChange = (e) => {
         const { name, value } = e.target;

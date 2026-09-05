@@ -27,7 +27,7 @@ export default function Register() {
 	const [alert, setAlert] = useState(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const navigate = useNavigate();
-	useTitle('Register - Kenzy Project');
+	useTitle('Register - K-Method');
 
 	const { handleSubmit, control, setError, clearErrors } = useForm({
 		resolver: yupResolver(registerFormSchema),

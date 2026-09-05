@@ -38,17 +38,18 @@ export default function Navbar() {
                 <Toolbar disableGutters>
                     {/* Placeholder for PNG Logo */}
                     <Box component={RouterLink} to="/" sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none', mr: 2 }}>
-                        {/* <img src="/logo.png" alt="Logo" style={{ height: 40, marginRight: 10 }} /> */}
-                        <Typography 
-                            variant="h6" 
-                            sx={{ 
-                                color: 'primary.main', 
+                        <img src="/logo.png" style={{ height: 116, marginRight: 10 }} alt='K-Method' />
+                        {/* <Typography
+                            variant="h6"
+                            sx={{
+                                color: 'primary.main',
                                 fontWeight: 'bold',
                                 letterSpacing: 2
                             }}
                         >
-                            Kenzy Project
-                        </Typography>
+                            K-Method
+                        </Typography>}*/}
+
                     </Box>
 
                     <Box sx={{ flexGrow: 1 }} />

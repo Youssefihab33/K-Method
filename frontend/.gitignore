@@ -1,3 +1,5 @@
+migrations/*
+
 # Logs
 logs
 *.log

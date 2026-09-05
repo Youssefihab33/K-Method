@@ -25,9 +25,8 @@ SECRET_KEY = 'django-insecure-@$9jp_*7huf&!!j53i)+puihu=%#jnaht935=gpt@2-w__=%b=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.100', '192.168.101', '127.0.0.1', 'kenzy-project.vercel.net']
-
-
+ALLOWED_HOSTS = ['192.168.1.100', '192.168.1.101',
+                 '127.0.0.1', 'localhost', 'k-method.vercel.net']
 # Application definition
 
 INSTALLED_APPS = [
@@ -96,43 +95,34 @@ AUTHENTICATION_BACKENDS = [
     # 'django.contrib.auth.backends.ModelBackend', # Default authentication backend
     'users.auth.Auth',  # Custom authentication backend
 ]
+
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
-
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_PATH = BASE_DIR / 'media'
-MEDIA_URL = 'media/'
-MEDIA_PATH = BASE_DIR.parent / 'data' / 'media'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# CORS Configuration
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR.parent / 'data' / 'media'
+
+# Upload Size Limits
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1572864000  # 1500 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 1572864000
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 # Django REST Framework Configuration

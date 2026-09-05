@@ -29,7 +29,7 @@ export default function Login() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const from = location.state?.from?.pathname || '/';
-	useTitle('Login - Kenzy Project');
+	useTitle('Login - K-Method');
 
 	const { handleSubmit, control, setError, clearErrors } = useForm({
 		resolver: yupResolver(loginFormSchema),

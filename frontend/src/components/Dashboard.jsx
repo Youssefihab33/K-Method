@@ -14,7 +14,7 @@ export default function Dashboard() {
     const [tabValue, setTabValue] = useState(0);
     const [message, setMessage] = useState(null);
 
-    useTitle('Dashboard - Kenzy Project');
+    useTitle('Dashboard - K-Method');
 
     useEffect(() => {
         fetchData();

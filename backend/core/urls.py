@@ -15,15 +15,22 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
-from users.views import LoginViewSet, RegisterViewSet, UsersViewSet
+from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from knox import views as knox_views
+from courses.views import CourseViewSet, ChapterViewSet, SessionViewSet
+from users.views import LoginViewSet, RegisterViewSet, UsersViewSet
+
 
 router = DefaultRouter()
-router.register('login', LoginViewSet, basename='login')
-router.register('register', RegisterViewSet, basename='register')
-router.register('users', UsersViewSet, basename='users')
+router.register(r'courses', CourseViewSet, basename='course')
+router.register(r'chapters', ChapterViewSet, basename='chapter')
+router.register(r'sessions', SessionViewSet, basename='session')
+router.register(r'login', LoginViewSet, basename='login')
+router.register(r'register', RegisterViewSet, basename='register')
+router.register(r'users', UsersViewSet, basename='users')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -32,5 +39,7 @@ urlpatterns = [
     path('auth/logoutall/', knox_views.LogoutAllView.as_view(), name='knox_logoutall'),
 ]
 
-# Router URLs registered at root: /login/, /register/, /users/, /users/current/
-urlpatterns += router.urls
+urlpatterns += router.urls
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
