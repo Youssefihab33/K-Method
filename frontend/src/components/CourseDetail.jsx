@@ -1,34 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
-import {
-    Container,
-    Typography,
-    Box,
-    Card,
-    CardContent,
-    Button,
-    Chip,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    List,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
-    Divider,
-    Alert,
-    CircularProgress,
-    Paper,
-} from '@mui/material';
-
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-
 import { useTitle } from 'react-use';
+import { Container, Typography, Box, Card, CardContent, Button, Chip, Accordion, AccordionSummary, AccordionDetails, List, ListItem, ListItemIcon, ListItemText, Divider, Alert, Paper } from '@mui/material';
+
+import { ExpandMore, PlayCircleOutlined, Check, CheckCircleOutlined, LockOutlined, PersonOutlined, MenuBook } from '@mui/icons-material';
+
 import { courseService } from '../api/courseService';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from './snippets/LoadingSpinner';
@@ -39,9 +15,7 @@ export default function CourseDetail() {
 
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [enrolling, setEnrolling] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
 
     useTitle(course ? `${course.name} - K-Method` : 'Course Details - K-Method');
 
@@ -65,33 +39,9 @@ export default function CourseDetail() {
     }, [id]);
 
     // Check if current user is enrolled in this course
-    const isEnrolled =
-        course?.enrolled_students?.includes(user?.id) ||
-        course?.is_enrolled
+    const enrolled = user?.student_profile?.enrolled_courses?.some((enrolledCourse) => enrolledCourse?.id === course?.id) || false
 
-    const handleEnroll = async () => {
-        setError('');
-        setSuccess('');
-        setEnrolling(true);
-
-        try {
-            await courseService.enrollCourse(id);
-            setSuccess('Successfully enrolled in this course!');
-            await fetchCourse(); // Refresh course data to reflect enrollment status
-        } catch (err) {
-            setError(err.response?.data?.detail || 'Failed to enroll in the course.');
-        } finally {
-            setEnrolling(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-                <LoadingSpinner />
-            </Box>
-        );
-    }
+    if (loading) return <LoadingSpinner />
 
     if (error && !course) {
         return (
@@ -104,7 +54,25 @@ export default function CourseDetail() {
     return (
         <Container maxWidth="lg" sx={{ mt: 6, mb: 8 }}>
             {/* Course Banner Card */}
-            <Card sx={{ mb: 4, position: 'relative', overflow: 'hidden' }}>
+            <Card sx={{
+                height: '100%', display: 'flex', flexDirection: 'column', marginBottom: 5, padding: 3, position: 'relative',
+                overflow: 'hidden', // Keeps the blurred pseudo-element inside the card boundaries
+                background: 'rgba(0, 0, 0, 0.7)', // Semi-transparent overlay so text stands out
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundImage: `url(${course.image})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    filter: 'blur(3px)', // Adjust the blur intensity here
+                    zIndex: -1, // Places the background behind your card content
+                    transform: 'scale(1.1)', // Prevents white edges caused by the blur filter
+                }
+            }}>
                 <CardContent sx={{ p: 4 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
                         <Box sx={{ maxWidth: '750px' }}>
@@ -112,24 +80,24 @@ export default function CourseDetail() {
                                 {course?.name}
                             </Typography>
                             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                                {course?.description || 'No detailed description provided for this course.'}
+                                {course?.description}
                             </Typography>
 
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                                 <Chip
-                                    icon={<PersonOutlineIcon />}
+                                    icon={<PersonOutlined />}
                                     label={`Tutor: ${course?.tutor_name || 'Instructor'}`}
                                     color="secondary"
                                     variant="outlined"
                                 />
                                 <Chip
-                                    icon={<MenuBookIcon />}
+                                    icon={<MenuBook />}
                                     label={`${course?.chapters?.length || 0} Chapters`}
                                     variant="outlined"
                                 />
-                                {isEnrolled && (
+                                {enrolled && (
                                     <Chip
-                                        icon={<CheckCircleOutlineIcon />}
+                                        icon={<CheckCircleOutlined />}
                                         label="Enrolled"
                                         color="success"
                                     />
@@ -149,7 +117,7 @@ export default function CourseDetail() {
                                 >
                                     Sign In to Enroll
                                 </Button>
-                            ) : isEnrolled ? (
+                            ) : enrolled ? (
                                 <Paper
                                     elevation={0}
                                     sx={{
@@ -160,19 +128,14 @@ export default function CourseDetail() {
                                         borderRadius: 2,
                                     }}
                                 >
-                                    <Typography variant="subtitle2" color="primary.light">
-                                        You have active access to this course.
+                                    <Check />
+                                    <Typography variant="subtitle2" color="primary.light" >
+                                         You have active access to this course.
                                     </Typography>
                                 </Paper>
                             ) : (
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    size="large"
-                                    onClick={handleEnroll}
-                                    disabled={enrolling}
-                                >
-                                    {enrolling ? 'Enrolling...' : 'Enroll in Course'}
+                                <Button variant="contained" color="primary" size="large" component={RouterLink} to={`/enroll/${course.id}`}>
+                                    Enroll
                                 </Button>
                             )}
                         </Box>
@@ -181,8 +144,7 @@ export default function CourseDetail() {
             </Card>
 
             {/* Notifications */}
-            {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
-            {error && course && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+            {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
             {/* Course Curriculum Section */}
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
@@ -192,7 +154,7 @@ export default function CourseDetail() {
             {course?.chapters && course.chapters.length > 0 ? (
                 course.chapters.map((chapter, index) => (
                     <Accordion key={chapter.id || index} defaultExpanded={index === 0} sx={{ mb: 2 }}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <AccordionSummary expand={<ExpandMore />}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
                                     Chapter {index + 1}: {chapter.title || chapter.name}
@@ -222,20 +184,20 @@ export default function CourseDetail() {
                                                 '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.02)' },
                                             }}
                                             secondaryAction={
-                                                isEnrolled ? (
+                                                enrolled ? (
                                                     <Button
                                                         variant="outlined"
                                                         size="small"
                                                         color="primary"
                                                         component={RouterLink}
                                                         to={`/sessions/${session.id}`}
-                                                        startIcon={<PlayCircleOutlineIcon />}
+                                                        startIcon={<PlayCircleOutlined />}
                                                     >
                                                         Watch
                                                     </Button>
                                                 ) : (
                                                     <Chip
-                                                        icon={<LockOutlinedIcon />}
+                                                        icon={<LockOutlined />}
                                                         label="Locked"
                                                         size="small"
                                                         variant="outlined"
@@ -245,7 +207,7 @@ export default function CourseDetail() {
                                             }
                                         >
                                             <ListItemIcon>
-                                                <PlayCircleOutlineIcon color={isEnrolled ? 'primary' : 'disabled'} />
+                                                <PlayCircleOutlined color={enrolled ? 'primary' : 'disabled'} />
                                             </ListItemIcon>
                                             <ListItemText
                                                 primary={session.title || session.name}

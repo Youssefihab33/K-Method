@@ -9,6 +9,7 @@ import { AuthProvider } from './context/AuthContext';
 // import { UserProvider, UserContext } from './components/APIs/Context';
 // import { ProtectedRoute } from './components/ProtectedRoute';
 
+import NotFound from './components/NotFound'
 import Navbar from './components/Navbar';
 import LoadingSpinner from './components/snippets/LoadingSpinner';
 
@@ -44,7 +45,7 @@ export default function App() {
                             <Route path='/profile' element={<Profile />} />
                         {/* </ProtectedRoute> */}
                         {/* Fallback */}
-                        {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
+                        <Route path="*" element={<NotFound to="/notfound" replace />} />
                     </Routes>
                 </Suspense>
             </AuthProvider>

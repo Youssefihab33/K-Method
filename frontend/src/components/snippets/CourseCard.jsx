@@ -18,7 +18,7 @@ export default function CourseCard({ course }) {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundImage: `url(${course.image || 'https://placeholder.com'})`, // Replace with your image source
+                backgroundImage: `url(${course.image})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 filter: 'blur(3px)', // Adjust the blur intensity here

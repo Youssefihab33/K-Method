@@ -21,21 +21,18 @@ export default function Navbar() {
         <AppBar position="sticky" sx={{ backgroundColor: 'rgba(21, 24, 33, 0.1)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(255, 255, 255, 0.2)' }}>
             <Container maxWidth="lg">
                 <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
-                    <a href='/'>
-                        <img src='/logo.png' style={{ height: 86, margin: 10 }} alt='K-Method' />
-                    </a>
-                    {/* <Typography variant="h6" component={RouterLink} to="/" sx={{ fontWeight: 700, color: 'primary.main', textDecoration: 'none' }}>
-                        K-Method
-                    </Typography> */}
+                    <img src='/logo.png' style={{ height: 86, margin: 10 }} alt='K-Method' />
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         {isAuthenticated ? (
                             <>
-                                {isTutor && (
-                                    <Button color="primary" component={RouterLink} to="/dashboard">
-                                        Dashboard
-                                    </Button>
-                                )}
+                                <Button color="primary" component={RouterLink} to="/">
+                                    Homepage
+                                </Button>
+                                <Button color="primary" component={RouterLink} to="/dashboard">
+                                    Dashboard
+                                </Button>
+                                
                                 <IconButton onClick={handleMenu} sx={{ p: 0 }}>
                                     <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}>
                                         {user?.first_name?.[0] || user?.email?.[0]?.toUpperCase()}
