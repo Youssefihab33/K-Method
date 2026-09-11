@@ -70,7 +70,7 @@ class CustomUser(AbstractUser):
 
     is_tutor = models.BooleanField(default=False)
     is_student = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['phone_number']
@@ -113,6 +113,7 @@ class StudentProfile(models.Model):
         related_name='student_profile'
     )
     reached = models.JSONField(default=dict, blank=True)
+    parent_phone_number = PhoneNumberField(region='EG', db_index=True)
     school = models.ForeignKey(
         'users.School', on_delete=models.SET_NULL, blank=True, null=True)
     student_id = models.CharField(

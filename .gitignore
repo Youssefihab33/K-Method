@@ -1,6 +1,6 @@
 # While in development only
 migrations/
-
+data/
 *.sqlite3
 *.pid
 

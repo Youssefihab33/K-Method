@@ -1,8 +1,18 @@
-import datetime
+import datetime, os
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
+from moviepy import VideoFileClip
 
+def rename_sessions(instance, filename):
+    ext = filename.split('.')[-1]
+    new_filename = f"{instance.number}.{instance.name}.{ext}"
+    return os.path.join('courses/', f'{instance.chapter.course.name}/', f'{instance.chapter.number}.{instance.chapter.name}', new_filename)
+
+def rename_course_images(instance, filename):
+    ext = filename.split('.')[-1]
+    new_filename = f'{instance.name}.{ext}'
+    return os.path.join('courses_images/', new_filename)
 
 def validate_max_year(value):
     max_year = datetime.date.today().year
@@ -25,9 +35,9 @@ class Course(models.Model):
         default=current_year,
         help_text='Use a valid year (e.g., 2025)'
     )
-    # image = models.ImageField(upload_to='course_images/', blank=True, null=True)
+    image = models.ImageField(upload_to=rename_course_images, blank=True, null=True)
     price = models.PositiveIntegerField(default=0)
-    contents = models.JSONField(default=dict, blank=True)
+    about = models.TextField(blank=True, default="")
     tutor = models.ForeignKey(
         'users.TutorProfile',
         on_delete=models.CASCADE,
@@ -43,7 +53,7 @@ class Course(models.Model):
         ordering = ['-year', 'name']
 
     def __str__(self):
-        return f'{self.tutor} - {self.name}'
+        return f'Dr.{self.tutor} - {self.name}'
 
 
 class Chapter(models.Model):
@@ -71,8 +81,8 @@ class Session(models.Model):
     )
     number = models.FloatField()
     name = models.CharField(max_length=250)
-    description = models.TextField(blank=True)
-    video_file = models.FileField(upload_to='videos/sessions/', blank=True, null=True)
+    notes = models.TextField(blank=True, default="")
+    video_file = models.FileField(upload_to=rename_sessions, blank=True, null=True)
     duration_minutes = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -81,3 +91,24 @@ class Session(models.Model):
 
     def __str__(self):
         return f'{self.chapter.name} - S.{self.number}: {self.name}'
+
+    def save(self, *args, **kwargs):
+        is_new_video = False
+        if self.pk:
+            old_entry = Session.objects.get(pk=self.pk)
+            if old_entry.video_file != self.video_file:
+                is_new_video = True
+        else:
+            is_new_video = True
+
+        super().save(*args, **kwargs)
+
+        if self.video_file and is_new_video:
+            try:
+                with VideoFileClip(self.video_file.path) as video:
+                    calculated_duration = int(video.duration / 60)
+                Session.objects.filter(pk=self.pk).update(duration_minutes=calculated_duration)
+                self.duration_minutes = calculated_duration
+                
+            except Exception as e:
+                print(f"Error parsing video duration: {e}")

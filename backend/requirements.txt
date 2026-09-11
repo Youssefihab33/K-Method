@@ -4,5 +4,7 @@ djangorestframework
 django-cors-headers
 django-rest-knox
 django-rest-passwordreset
+django-nested-admin
 python-dotenv
 Pillow
+moviepy

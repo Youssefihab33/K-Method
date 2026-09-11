@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from .models import CustomUser, StudentProfile, TutorProfile
+from courses.serializers import CourseDetailSerializer
 
 User = get_user_model()
 
@@ -74,9 +75,13 @@ class TutorProfileSerializer(serializers.ModelSerializer):
 
 
 class StudentProfileSerializer(serializers.ModelSerializer):
+    enrolled_courses = CourseDetailSerializer(
+        many=True,
+        read_only=True
+    )
     class Meta:
         model = StudentProfile
-        fields = ['reached', 'school', 'student_id']
+        fields = ['reached', 'school', 'student_id', 'enrolled_courses']
 
 
 class UserSerializer(serializers.ModelSerializer):

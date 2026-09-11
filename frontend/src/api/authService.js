@@ -3,7 +3,7 @@ import axiosClient from './axiosClient';
 export const authService = {
   // Login user and return token + user data
   login: async (credentials) => {
-    const response = await axiosClient.post('/users/login/', credentials);
+    const response = await axiosClient.post('/login/', credentials);
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -13,7 +13,7 @@ export const authService = {
 
   // Register a new user
   register: async (userData) => {
-    const response = await axiosClient.post('/users/register/', userData);
+    const response = await axiosClient.post('/register/', userData);
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -29,25 +29,25 @@ export const authService = {
 
   // Fetch authenticated user profile
   getCurrentUser: async () => {
-    const response = await axiosClient.get('/users/users/current/');
+    const response = await axiosClient.get('/users/current/');
     return response.data;
   },
 
   // Update authenticated user profile
   updateCurrentUser: async (userData) => {
-    const response = await axiosClient.patch('/users/users/current/', userData);
+    const response = await axiosClient.patch('/users/current/', userData);
     return response.data;
   },
 
   // User List (Admin/Tutor view)
   getUsers: async () => {
-    const response = await axiosClient.get('/users/users/');
+    const response = await axiosClient.get('/users/');
     return response.data;
   },
 
   // Fetch specific user details
   getUserById: async (id) => {
-    const response = await axiosClient.get(`/users/users/${id}/`);
+    const response = await axiosClient.get(`/users/${id}/`);
     return response.data;
   },
 };

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_rest_passwordreset',
     'knox',
+    'nested_admin',
     'corsheaders',
     'phonenumber_field',
     'users',

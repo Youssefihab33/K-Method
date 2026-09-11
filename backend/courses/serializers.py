@@ -6,7 +6,7 @@ class SessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Session
         fields = ['id', 'chapter', 'number', 'name',
-                  'description', 'video_file', 'duration_minutes']
+                  'notes', 'video_file', 'duration_minutes']
 
 
 class ChapterSerializer(serializers.ModelSerializer):
@@ -24,7 +24,7 @@ class CourseListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ['id', 'name', 'year', 'price',
+        fields = ['id', 'name', 'year', 'price', 'image', 'about',
                   'tutor', 'tutor_name', 'students_count']
 
 
@@ -34,5 +34,5 @@ class CourseDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ['id', 'name', 'year', 'price',
-                  'contents', 'tutor', 'tutor_name', 'chapters']
+        fields = ['id', 'name', 'year', 'price', 'image',
+                  'about', 'tutor', 'tutor_name', 'chapters']

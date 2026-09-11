@@ -47,6 +47,18 @@ class LoginViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
     serializer_class = LoginSerializer
 
+    # @action(detail=False, methods=['post'], url_path='login')
+    # def perform_login(self, request):
+    #     serializer = self.serializer_class(data=request.data, context={'request': request})
+    #     if serializer.is_valid():
+    #         user = serializer.validated_data['user']
+    #         _, token = AuthToken.objects.create(user)
+    #         return Response({
+    #             'user': UserSerializer(user).data, 
+    #             'token': token
+    #         }, status=status.HTTP_200_OK)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def create(self, request):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         if serializer.is_valid():

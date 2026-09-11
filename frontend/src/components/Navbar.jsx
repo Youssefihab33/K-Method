@@ -1,105 +1,59 @@
-import { AppBar, Toolbar, Typography, Button, Box, Container, Avatar, Menu, MenuItem, IconButton, Tooltip } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, Container, IconButton, Menu, MenuItem, Avatar } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { useContext, useState } from 'react';
-import { UserContext } from './APIs/Context.jsx';
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
-    const { user, logout } = useContext(UserContext);
+    const { user, isAuthenticated, logout, isTutor } = useAuth();
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState(null);
 
-    const handleOpenUserMenu = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleCloseUserMenu = () => {
-        setAnchorEl(null);
-    };
+    const handleMenu = (event) => setAnchorEl(event.currentTarget);
+    const handleClose = () => setAnchorEl(null);
 
     const handleLogout = () => {
-        handleCloseUserMenu();
+        handleClose();
         logout();
         navigate('/login');
     };
 
-    const handleProfile = () => {
-        handleCloseUserMenu();
-        navigate('/profile');
-    };
-
-    const handleDashboard = () => {
-        handleCloseUserMenu();
-        navigate('/');
-    };
-
     return (
-        <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <AppBar position="sticky" sx={{ backgroundColor: 'rgba(21, 24, 33, 0.1)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(255, 255, 255, 0.2)' }}>
             <Container maxWidth="lg">
-                <Toolbar disableGutters>
-                    {/* Placeholder for PNG Logo */}
-                    <Box component={RouterLink} to="/" sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none', mr: 2 }}>
-                        <img src="/logo.png" style={{ height: 116, marginRight: 10 }} alt='K-Method' />
-                        {/* <Typography
-                            variant="h6"
-                            sx={{
-                                color: 'primary.main',
-                                fontWeight: 'bold',
-                                letterSpacing: 2
-                            }}
-                        >
-                            K-Method
-                        </Typography>}*/}
+                <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
+                    <a href='/'>
+                        <img src='/logo.png' style={{ height: 86, margin: 10 }} alt='K-Method' />
+                    </a>
+                    {/* <Typography variant="h6" component={RouterLink} to="/" sx={{ fontWeight: 700, color: 'primary.main', textDecoration: 'none' }}>
+                        K-Method
+                    </Typography> */}
 
-                    </Box>
-
-                    <Box sx={{ flexGrow: 1 }} />
-
-                    <Box sx={{ flexGrow: 0 }}>
-                        {!user ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        {isAuthenticated ? (
                             <>
-                                <Button component={RouterLink} to="/login" color="inherit">Login</Button>
-                                <Button component={RouterLink} to="/register" variant="outlined" sx={{ ml: 2 }}>Register</Button>
+                                {isTutor && (
+                                    <Button color="primary" component={RouterLink} to="/dashboard">
+                                        Dashboard
+                                    </Button>
+                                )}
+                                <IconButton onClick={handleMenu} sx={{ p: 0 }}>
+                                    <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}>
+                                        {user?.first_name?.[0] || user?.email?.[0]?.toUpperCase()}
+                                    </Avatar>
+                                </IconButton>
+                                <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+                                    <MenuItem onClick={() => { handleClose(); navigate('/profile'); }}>Profile</MenuItem>
+                                    <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                                </Menu>
                             </>
                         ) : (
                             <>
-                                <Tooltip title="Open settings">
-                                    <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                        <Avatar sx={{ bgcolor: 'primary.main' }}>
-                                            {user.first_name?.[0]}{user.last_name?.[0]}
-                                        </Avatar>
-                                    </IconButton>
-                                </Tooltip>
-                                <Menu
-                                    sx={{ mt: '45px' }}
-                                    id="menu-appbar"
-                                    anchorEl={anchorEl}
-                                    anchorOrigin={{
-                                        vertical: 'top',
-                                        horizontal: 'right',
-                                    }}
-                                    keepMounted
-                                    transformOrigin={{
-                                        vertical: 'top',
-                                        horizontal: 'right',
-                                    }}
-                                    open={Boolean(anchorEl)}
-                                    onClose={handleCloseUserMenu}
-                                >
-                                    <MenuItem disabled>
-                                        <Typography textAlign="center" variant="body2" color="text.secondary">
-                                            {user.first_name} {user.last_name}
-                                        </Typography>
-                                    </MenuItem>
-                                    <MenuItem onClick={handleDashboard}>
-                                        <Typography textAlign="center">Dashboard</Typography>
-                                    </MenuItem>
-                                    <MenuItem onClick={handleProfile}>
-                                        <Typography textAlign="center">Profile</Typography>
-                                    </MenuItem>
-                                    <MenuItem onClick={handleLogout}>
-                                        <Typography textAlign="center" color="error">Logout</Typography>
-                                    </MenuItem>
-                                </Menu>
+                                <Button color="inherit" component={RouterLink} to="/login">
+                                    Sign In
+                                </Button>
+                                <Button variant="contained" color="primary" component={RouterLink} to="/register">
+                                    Register
+                                </Button>
                             </>
                         )}
                     </Box>
