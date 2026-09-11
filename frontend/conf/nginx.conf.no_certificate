@@ -1,0 +1,19 @@
+# This block is for Certbot validation via HTTP and serving your React app
+server {
+    listen 80;
+    server_name simsy.redirectme.net;
+
+    # This location block is crucial for Certbot
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot; # This MUST match the volume mount in docker-compose
+    }
+
+    # This is the root for your React app for HTTP requests.
+    # It's important that this doesn't interfere with the .well-known path.
+    location / {
+        root /usr/share/nginx/html; # Path to your React app's build directory inside container
+        index index.html index.htm;
+        try_files $uri $uri/ /index.html;
+    }
+
+}

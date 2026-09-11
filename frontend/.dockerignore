@@ -1,0 +1,7 @@
+node_modules/
+*.log
+.env
+.env.example
+.env.production.example
+.dockerignore
+Dockerfile # Dockerfile is always sent to the daemon regardless of this line, but won't be copied into the image.

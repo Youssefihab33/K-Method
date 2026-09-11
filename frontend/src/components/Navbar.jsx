@@ -24,15 +24,15 @@ export default function Navbar() {
                     <img src='/logo.png' style={{ height: 86, margin: 10 }} alt='K-Method' />
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Button color="primary" component={RouterLink} to="/">
+                            Homepage
+                        </Button>
                         {isAuthenticated ? (
                             <>
-                                <Button color="primary" component={RouterLink} to="/">
-                                    Homepage
-                                </Button>
                                 <Button color="primary" component={RouterLink} to="/dashboard">
                                     Dashboard
                                 </Button>
-                                
+
                                 <IconButton onClick={handleMenu} sx={{ p: 0 }}>
                                     <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}>
                                         {user?.first_name?.[0] || user?.email?.[0]?.toUpperCase()}
