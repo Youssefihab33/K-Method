@@ -29,10 +29,17 @@ class CourseListSerializer(serializers.ModelSerializer):
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):
+    # tutor_phone_number = str(tutor.user.phone_number)
     chapters = ChapterSerializer(many=True, read_only=True)
     tutor_name = serializers.ReadOnlyField(source='tutor.user.get_full_name')
+    tutor_phone_number = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
-        fields = ['id', 'name', 'year', 'price', 'image',
+        fields = ['id', 'name', 'year', 'price', 'image', 'tutor_phone_number',
                   'about', 'tutor', 'tutor_name', 'chapters']
+
+    def get_tutor_phone_number(self, obj):
+        if obj.tutor and obj.tutor.user and obj.tutor.user.phone_number:
+            return str(obj.tutor.user.phone_number)
+        return None

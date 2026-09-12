@@ -190,7 +190,7 @@ export default function CourseDetail() {
                                                         size="small"
                                                         color="primary"
                                                         component={RouterLink}
-                                                        to={`/sessions/${session.id}`}
+                                                        to={`/session/${course.id}/${chapter.number}/${session.number}`}
                                                         startIcon={<PlayCircleOutlined />}
                                                     >
                                                         Watch

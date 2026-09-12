@@ -19,8 +19,9 @@ import Register from './components/Register';
 // import Dashboard from './components/Dashboard';
 import Profile from './components/Profile';
 
-
+const Enroll = lazy(() => import('./components/Enroll'));
 const CourseDetail = lazy(() => import('./components/CourseDetail'));
+const Session = lazy(() => import('./components/Session'));
 
 const PageLoader = () => (
     <LoadingSpinner />
@@ -39,10 +40,12 @@ export default function App() {
                         <Route path='/login/' element={<Login />} />
                         <Route path='/register/' element={<Register />} />
                         <Route path='/course/:id' element={<CourseDetail />} />
+                        <Route path='/enroll/:id' element={<Enroll />} />
 
                         {/* Protected Routes */}
                         {/* <ProtectedRoute> */}
                             <Route path='/profile' element={<Profile />} />
+                            <Route path="/session/:course_id/:chapter_number/:session_number" element={<Session />} />
                         {/* </ProtectedRoute> */}
                         {/* Fallback */}
                         <Route path="*" element={<NotFound to="/notfound" replace />} />
