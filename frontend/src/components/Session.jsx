@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -19,8 +19,8 @@ import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
-import videojs from 'video.js';
-import 'video.js/dist/video-js.css';
+import { VideoPlayer, VideoSkin, Video } from '@videojs/react/video';
+import '@videojs/react/video/skin.css';
 
 import { useTitle } from 'react-use';
 import { courseService } from '../api/courseService';
@@ -34,9 +34,6 @@ export default function Session() {
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-
-    const videoRef = useRef(null);
-    const playerRef = useRef(null);
 
     const chapIdx = parseInt(chapter_number, 10) - 1;
     const sessIdx = parseInt(session_number, 10) - 1;
@@ -91,59 +88,6 @@ export default function Session() {
     }, [course]);
 
     const videoSource = currentSession?.video_file || currentSession?.video_url;
-
-    useEffect(() => {
-        // Make sure player is not initialized twice
-        if (!playerRef.current && videoRef.current && videoSource) {
-            const videoElement = document.createElement('video-js');
-            videoElement.classList.add('vjs-big-play-centered');
-            videoRef.current.appendChild(videoElement);
-
-            const player = (playerRef.current = videojs(
-                videoElement,
-                {
-                    controls: true,
-                    autoplay: false,
-                    preload: 'auto',
-                    fluid: true,
-                    aspectRatio: '16:9',
-                    controlBar: {
-                        pictureInPictureToggle: false, // Hide PiP to prevent video extraction
-                    },
-                    sources: [
-                        {
-                            src: videoSource,
-                            type: 'video/mp4',
-                        },
-                    ],
-                },
-                () => {
-                    // Player ready callback
-                }
-            ));
-
-            // Disable context menu on the player element
-            player.on('contextmenu', (e) => {
-                e.preventDefault();
-            });
-        } else if (playerRef.current && videoSource) {
-            // Update existing player source if the session changes without unmounting
-            const player = playerRef.current;
-            player.src({ src: videoSource, type: 'video/mp4' });
-        }
-    }, [videoSource]);
-
-    // Clean up player on unmount
-    useEffect(() => {
-        const player = playerRef.current;
-
-        return () => {
-            if (player && !player.isDisposed()) {
-                player.dispose();
-                playerRef.current = null;
-            }
-        };
-    }, []);
 
     // Find index of current session within the flattened list
     const currentIndex = allSessionsSequence.findIndex(
@@ -249,40 +193,30 @@ export default function Session() {
                 <Box
                     sx={{
                         width: '100%',
+                        aspectRatio: '16/9',
                         backgroundColor: '#000',
                         position: 'relative',
                         userSelect: 'none',
-                        '& .video-js': {
+                        display: 'block',
+                        '& video-player, & media-player': {
                             width: '100%',
                             height: '100%',
-                        },
-                        '& .vjs-big-play-button': {
-                            backgroundColor: '#AF913B',
-                            borderColor: '#AF913B',
-                            borderRadius: '50%',
-                            width: '64px',
-                            height: '64px',
-                            lineHeight: '64px',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            '&:hover': {
-                                backgroundColor: '#c4a347',
-                            },
-                        },
-                        '& .vjs-control-bar': {
-                            backgroundColor: 'rgba(21, 24, 33, 0.85)',
-                            backdropFilter: 'blur(8px)',
+                            display: 'block',
                         },
                     }}
                     onContextMenu={handleContextMenu}
                 >
                     {videoSource ? (
-                        <div ref={videoRef} onContextMenu={handleContextMenu} />
+                        <VideoPlayer key={videoSource}>
+                            <VideoSkin>
+                                <Video src={videoSource} controls playsInline />
+                            </VideoSkin>
+                        </VideoPlayer>
                     ) : (
                         <Box
                             sx={{
-                                aspectRatio: '16/9',
+                                width: '100%',
+                                height: '100%',
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
