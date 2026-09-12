@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -19,6 +19,9 @@ import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
+import videojs from 'video.js';
+import 'video.js/dist/video-js.css';
+
 import { useTitle } from 'react-use';
 import { courseService } from '../api/courseService';
 import { useAuth } from '../context/AuthContext';
@@ -31,6 +34,9 @@ export default function Session() {
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    const videoRef = useRef(null);
+    const playerRef = useRef(null);
 
     const chapIdx = parseInt(chapter_number, 10) - 1;
     const sessIdx = parseInt(session_number, 10) - 1;
@@ -83,6 +89,61 @@ export default function Session() {
         });
         return list;
     }, [course]);
+
+    const videoSource = currentSession?.video_file || currentSession?.video_url;
+
+    useEffect(() => {
+        // Make sure player is not initialized twice
+        if (!playerRef.current && videoRef.current && videoSource) {
+            const videoElement = document.createElement('video-js');
+            videoElement.classList.add('vjs-big-play-centered');
+            videoRef.current.appendChild(videoElement);
+
+            const player = (playerRef.current = videojs(
+                videoElement,
+                {
+                    controls: true,
+                    autoplay: false,
+                    preload: 'auto',
+                    fluid: true,
+                    aspectRatio: '16:9',
+                    controlBar: {
+                        pictureInPictureToggle: false, // Hide PiP to prevent video extraction
+                    },
+                    sources: [
+                        {
+                            src: videoSource,
+                            type: 'video/mp4',
+                        },
+                    ],
+                },
+                () => {
+                    // Player ready callback
+                }
+            ));
+
+            // Disable context menu on the player element
+            player.on('contextmenu', (e) => {
+                e.preventDefault();
+            });
+        } else if (playerRef.current && videoSource) {
+            // Update existing player source if the session changes without unmounting
+            const player = playerRef.current;
+            player.src({ src: videoSource, type: 'video/mp4' });
+        }
+    }, [videoSource]);
+
+    // Clean up player on unmount
+    useEffect(() => {
+        const player = playerRef.current;
+
+        return () => {
+            if (player && !player.isDisposed()) {
+                player.dispose();
+                playerRef.current = null;
+            }
+        };
+    }, []);
 
     // Find index of current session within the flattened list
     const currentIndex = allSessionsSequence.findIndex(
@@ -157,7 +218,7 @@ export default function Session() {
                     <Button
                         variant="outlined"
                         component={RouterLink}
-                        to={`/courses/${course_id}`}
+                        to={`/course/${course_id}`}
                         startIcon={<ArrowBackIcon />}
                     >
                         Back to Course Overview
@@ -174,7 +235,7 @@ export default function Session() {
                 <Link component={RouterLink} to="/" underline="hover" color="inherit">
                     Home
                 </Link>
-                <Link component={RouterLink} to={`/courses/${course.id}`} underline="hover" color="inherit">
+                <Link component={RouterLink} to={`/course/${course.id}`} underline="hover" color="inherit">
                     {course.name}
                 </Link>
                 <Typography color="text.primary">
@@ -184,42 +245,53 @@ export default function Session() {
 
             {/* Main Video Display Card */}
             <Card sx={{ mb: 4, backgroundColor: 'rgba(21, 24, 33, 0.95)', overflow: 'hidden' }}>
+                {/* Video.js Player Container */}
                 <Box
                     sx={{
-                        position: 'relative',
                         width: '100%',
                         backgroundColor: '#000',
-                        aspectRatio: '16/9',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
+                        position: 'relative',
                         userSelect: 'none',
+                        '& .video-js': {
+                            width: '100%',
+                            height: '100%',
+                        },
+                        '& .vjs-big-play-button': {
+                            backgroundColor: '#AF913B',
+                            borderColor: '#AF913B',
+                            borderRadius: '50%',
+                            width: '64px',
+                            height: '64px',
+                            lineHeight: '64px',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            '&:hover': {
+                                backgroundColor: '#c4a347',
+                            },
+                        },
+                        '& .vjs-control-bar': {
+                            backgroundColor: 'rgba(21, 24, 33, 0.85)',
+                            backdropFilter: 'blur(8px)',
+                        },
                     }}
                     onContextMenu={handleContextMenu}
                 >
-                    {currentSession.video_file || currentSession.video_url ? (
-                        <video
-                            key={currentSession.id || `${chapter_number}-${session_number}`}
-                            controls
-                            controlsList="nodownload noremoteplayback"
-                            disablePictureInPicture
-                            onContextMenu={handleContextMenu}
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'contain',
+                    {videoSource ? (
+                        <div ref={videoRef} onContextMenu={handleContextMenu} />
+                    ) : (
+                        <Box
+                            sx={{
+                                aspectRatio: '16/9',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
                             }}
                         >
-                            <source
-                                src={currentSession.video_file || currentSession.video_url}
-                                type="video/mp4"
-                            />
-                            Your browser does not support HTML5 video streaming.
-                        </video>
-                    ) : (
-                        <Typography color="text.secondary">
-                            No video source attached to this session.
-                        </Typography>
+                            <Typography color="text.secondary">
+                                No video source attached to this session.
+                            </Typography>
+                        </Box>
                     )}
                 </Box>
 
@@ -251,17 +323,17 @@ export default function Session() {
                     startIcon={<NavigateBeforeIcon />}
                     disabled={!prevSessionItem}
                     onClick={() =>
-                        navigate(`/${course_id}/${prevSessionItem.chapterNum}/${prevSessionItem.sessionNum}`)
+                        navigate(`/session/${course_id}/${prevSessionItem.chapterNum}/${prevSessionItem.sessionNum}`)
                     }
                 >
-                    {prevSessionItem ? `Previous: ${prevSessionItem.sessionTitle}` : 'Previous Session'}
+                    {prevSessionItem ? `Previous: ${prevSessionItem.chapterTitle} - ${prevSessionItem.sessionTitle}` : 'Previous Session'}
                 </Button>
 
                 <Button
                     variant="outlined"
                     color="secondary"
                     component={RouterLink}
-                    to={`/courses/${course_id}`}
+                    to={`/course/${course_id}`}
                 >
                     Course Syllabus
                 </Button>
@@ -273,10 +345,10 @@ export default function Session() {
                     endIcon={<NavigateNextIcon />}
                     disabled={!nextSessionItem}
                     onClick={() =>
-                        navigate(`/${course_id}/${nextSessionItem.chapterNum}/${nextSessionItem.sessionNum}`)
+                        navigate(`/session/${course_id}/${nextSessionItem.chapterNum}/${nextSessionItem.sessionNum}`)
                     }
                 >
-                    {nextSessionItem ? `Next: ${nextSessionItem.sessionTitle}` : 'Next Session'}
+                    {nextSessionItem ? `Next: ${nextSessionItem.chapterTitle} - ${nextSessionItem.sessionTitle}` : 'Next Session'}
                 </Button>
             </Box>
         </Container>

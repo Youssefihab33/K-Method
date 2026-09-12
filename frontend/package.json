@@ -21,6 +21,7 @@
     "react-hook-form": "^7.80.0",
     "react-router-dom": "^7.18.0",
     "react-use": "^17.6.1",
+    "video.js": "^8.24.0",
     "yup": "^1.7.1"
   },
   "devDependencies": {
