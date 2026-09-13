@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
-    const { user, isAuthenticated, logout, isTutor } = useAuth();
+    const { user, isAuthenticated, logout, isTutor, isStaff } = useAuth();
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState(null);
 
@@ -29,9 +29,9 @@ export default function Navbar() {
                         </Button>
                         {isAuthenticated ? (
                             <>
-                                <Button color="primary" component={RouterLink} to="/dashboard">
+                                {/* <Button color="primary" component={RouterLink} to="/dashboard">
                                     Dashboard
-                                </Button>
+                                </Button> */}
 
                                 <IconButton onClick={handleMenu} sx={{ p: 0 }}>
                                     <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}>
@@ -40,6 +40,7 @@ export default function Navbar() {
                                 </IconButton>
                                 <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
                                     <MenuItem onClick={() => { handleClose(); navigate('/profile'); }}>Profile</MenuItem>
+                                    {isStaff && <MenuItem onClick={() => { handleClose(); navigate('/auth/admin'); }}>Admin</MenuItem>}
                                     <MenuItem onClick={handleLogout}>Logout</MenuItem>
                                 </Menu>
                             </>

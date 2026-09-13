@@ -60,6 +60,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user,
     isStudent: !!user?.is_student,
     isTutor: !!user?.is_tutor,
+    isStaff: !!user?.is_staff,
     login,
     register,
     logout,
