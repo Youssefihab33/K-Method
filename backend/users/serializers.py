@@ -1,11 +1,22 @@
 from django.contrib.auth import get_user_model, authenticate
-from rest_framework import serializers
-from .models import CustomUser, StudentProfile, TutorProfile
-from courses.serializers import CourseDetailSerializer
 from django.contrib.auth.tokens import default_token_generator
+from .email import send_html_email
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
+
+from rest_framework import serializers
+from phonenumber_field.serializerfields import PhoneNumberField
+
+from .models import School, CustomUser, StudentProfile, TutorProfile
+from courses.serializers import CourseDetailSerializer
+
 User = get_user_model()
+
+
+class SchoolSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = School
+        fields = ['id', 'name', 'kind', 'address']
 
 
 class LoginSerializer(serializers.Serializer):
@@ -48,10 +59,27 @@ class LoginSerializer(serializers.Serializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
+    parent_phone_number = PhoneNumberField(
+        region='EG', required=False, allow_null=True)
+    school = serializers.PrimaryKeyRelatedField(
+        queryset=School.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    student_id = serializers.CharField(
+        max_length=50,
+        required=False,
+        allow_blank=True,
+        allow_null=True
+    )
+
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email',
-                  'phone_number', 'password', 'is_student', 'is_tutor']
+        fields = [
+            'id', 'first_name', 'last_name', 'email', 'phone_number',
+            'password', 'is_student', 'is_tutor',
+            'parent_phone_number', 'school', 'student_id'
+        ]
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -64,9 +92,37 @@ class RegisterSerializer(serializers.ModelSerializer):
         return normalized_email
 
     def create(self, validated_data):
-        # Explicitly set is_active=True so the user can log in after registering
+        # Extract student profile specific fields
+        parent_phone = validated_data.pop('parent_phone_number', None)
+        school = validated_data.pop('school', None)
+        student_id = validated_data.pop('student_id', None)
+
         validated_data['is_active'] = True
         user = User.objects.create_user(**validated_data)
+
+        # Update the StudentProfile created by the post_save signal
+        if user.is_student:
+            profile, _ = StudentProfile.objects.get_or_create(user=user)
+            if parent_phone:
+                profile.parent_phone_number = parent_phone
+            if school:
+                profile.school = school
+            if student_id:
+                profile.student_id = student_id
+            profile.save()
+
+        # Send Welcome Email
+        try:
+            send_html_email(
+                subject="Welcome to Our Platform!",
+                template_name="emails/welcome.html",
+                context={'first_name': user.first_name},
+                recipient_list=[user.email],
+                plain_fallback_message=f"Hi {user.first_name},\nWelcome to our platform!",
+                fail_silently=True
+            )
+        except Exception:
+            pass
         return user
 
 
@@ -81,6 +137,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True
     )
+
     class Meta:
         model = StudentProfile
         fields = ['reached', 'school', 'student_id', 'enrolled_courses']
@@ -99,8 +156,10 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'email', 'is_staff', 'is_active']
 
+
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
+
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     uidb64 = serializers.CharField()
@@ -112,10 +171,12 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
             uid = force_str(urlsafe_base64_decode(attrs['uidb64']))
             user = User.objects.get(pk=uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            raise serializers.ValidationError({"token": "Invalid user or UID."})
+            raise serializers.ValidationError(
+                {"token": "Invalid user or UID."})
 
         if not default_token_generator.check_token(user, attrs['token']):
-            raise serializers.ValidationError({"token": "Invalid or expired token."})
+            raise serializers.ValidationError(
+                {"token": "Invalid or expired token."})
 
         attrs['user'
               ] = user

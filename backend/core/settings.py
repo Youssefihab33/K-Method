@@ -90,6 +90,10 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD')
 DEFAULT_FROM_EMAIL = os.getenv('EMAIL_DEFAULT_FROM')
 FRONTEND_URL = os.getenv('FRONTEND_URL')
+SITE_NAME = 'K-Method'
+SITE_LOGO_URL = f"{FRONTEND_URL}/logo.png"
+BRAND_COLOR_PRIMARY = '#AF913B'
+BRAND_COLOR_SECONDARY = '#414954'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases

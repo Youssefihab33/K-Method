@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-from django.core.mail import send_mail
+from .email import send_html_email
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import status, viewsets
 from rest_framework.views import APIView
@@ -11,7 +11,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from knox.models import AuthToken  # type: ignore
 
-from .serializers import LoginSerializer, RegisterSerializer, UserSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer
+from .models import School, EmailVerificationCode
+from .serializers import SchoolSerializer, LoginSerializer, RegisterSerializer, UserSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer
 User = get_user_model()
 
 # def send_email(subject, template, user, btnLink=""):
@@ -114,35 +115,90 @@ class UsersViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+class SchoolViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = School.objects.all()
+    serializer_class = SchoolSerializer
+    permission_classes = [AllowAny]
+
+
+class SendEmailCodeView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email', '').lower().strip()
+        if not email:
+            return Response({'email': 'Email field is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(email=email).exists():
+            return Response({'email': 'An account with this email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        verification_obj = EmailVerificationCode.generate_code(email)
+        send_html_email(
+            subject="Your Verification Code",
+            template_name="emails/verification_code.html",
+            context={'code': verification_obj.code},
+            recipient_list=[email],
+            plain_fallback_message=f"Your verification code is: {verification_obj.code}",
+            fail_silently=False
+        )
+
+        return Response({'detail': 'Verification code sent to your email.'}, status=status.HTTP_200_OK)
+
+
+class VerifyEmailCodeView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email', '').lower().strip()
+        code = request.data.get('code', '').strip()
+
+        if not email or not code:
+            return Response({'detail': 'Email and code are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        record = EmailVerificationCode.objects.filter(
+            email=email, code=code).order_by('-created_at').first()
+
+        if not record or not record.is_valid():
+            return Response({'detail': 'Invalid or expired verification code.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        record.is_verified = True
+        record.save()
+
+        return Response({'detail': 'Email verified successfully.'}, status=status.HTTP_200_OK)
+
+
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = PasswordResetRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
+        email = request.data.get('email', '').lower().strip()
+        if not email:
+            return Response({'email': 'Email field is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            user = User.objects.get(email=email)
+        user = User.objects.filter(email=email).first()
+
+        # For security reasons, respond with success even if user isn't found
+        if user:
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
 
-            # Frontend URL where the user will reset their password
-            reset_url = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
+            # Construct frontend URL (e.g. http://localhost:5173/reset-password/UID/TOKEN)
+            frontend_domain = getattr(
+                settings, 'FRONTEND_URL', 'http://localhost:5173')
+            reset_url = f"{frontend_domain}/reset-password/{uid}/{token}/"
 
-            send_mail(
-                subject="Reset Your Password",
-                message=f"Click the link below to reset your password:\n\n{reset_url}\n\nIf you did not request this, please ignore this email.",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-                fail_silently=False,
+            send_html_email(
+                subject="Password Reset Request",
+                template_name="emails/password_reset.html",
+                context={'first_name': user.first_name,
+                         'reset_url': reset_url},
+                recipient_list=[user.email],
+                plain_fallback_message=f"Hi {user.first_name},\nReset your password here: {reset_url}",
+                fail_silently=True
             )
-        except User.DoesNotExist:
-            # Silence error to prevent email enumeration attacks
-            pass
 
         return Response(
-            {"detail": "If an account with that email exists, a password reset link has been sent.\nPlease check your inbox."},
+            {'detail': 'If an account exists with this email, a password reset link has been sent.\nPlease check your inbox.'},
             status=status.HTTP_200_OK
         )
 
