@@ -1,5 +1,6 @@
-import datetime
+import datetime, random
 from django.db import models
+from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
 from phonenumber_field.modelfields import PhoneNumberField
@@ -37,6 +38,25 @@ class School(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class EmailVerificationCode(models.Model):
+    email = models.EmailField(db_index=True)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_verified = models.BooleanField(default=False)
+
+    def is_valid(self):
+        # Code expires after 10 minutes
+        now = timezone.now()
+        return not self.is_verified and (now - self.created_at).total_seconds() < 600
+
+    @classmethod
+    def generate_code(cls, email):
+        code = f"{random.randint(100000, 999999)}"
+        # Invalidate past codes for this email
+        cls.objects.filter(email=email, is_verified=False).delete()
+        return cls.objects.create(email=email, code=code)
 
 
 class CustomUserManager(BaseUserManager):
