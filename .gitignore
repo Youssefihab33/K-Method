@@ -3,6 +3,7 @@ migrations/
 data/
 *.sqlite3
 *.pid
+.venv/
 
 # Python cache
 __pycache__/

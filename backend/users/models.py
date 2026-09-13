@@ -113,7 +113,7 @@ class StudentProfile(models.Model):
         related_name='student_profile'
     )
     reached = models.JSONField(default=dict, blank=True)
-    parent_phone_number = PhoneNumberField(region='EG', db_index=True)
+    parent_phone_number = PhoneNumberField(region='EG', db_index=True, blank=True)
     school = models.ForeignKey(
         'users.School', on_delete=models.SET_NULL, blank=True, null=True)
     student_id = models.CharField(
