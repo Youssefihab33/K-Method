@@ -50,4 +50,16 @@ export const authService = {
     const response = await axiosClient.get(`/users/${id}/`);
     return response.data;
   },
+
+  // Password Reset
+  passwordReset: async (email) => {
+    const response = await axiosClient.post('/auth/password-reset/', { email });
+    return response.data;
+  },
+
+  // Password Reset Confirmation
+  passwordResetConfirmation: async (uidb64, token, password) => {
+    const response = await axiosClient.post('/auth/password-reset-confirm/', {uidb64, token, new_password: password,});
+    return response.data;
+  },
 };

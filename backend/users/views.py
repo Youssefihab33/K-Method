@@ -1,11 +1,17 @@
 from django.contrib.auth import get_user_model
+from django.conf import settings
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.core.mail import send_mail
+from django.contrib.auth.tokens import default_token_generator
 from rest_framework import status, viewsets
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from knox.models import AuthToken  # type: ignore
 
-from .serializers import LoginSerializer, RegisterSerializer, UserSerializer
+from .serializers import LoginSerializer, RegisterSerializer, UserSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer
 User = get_user_model()
 
 # def send_email(subject, template, user, btnLink=""):
@@ -54,18 +60,19 @@ class LoginViewSet(viewsets.ViewSet):
     #         user = serializer.validated_data['user']
     #         _, token = AuthToken.objects.create(user)
     #         return Response({
-    #             'user': UserSerializer(user).data, 
+    #             'user': UserSerializer(user).data,
     #             'token': token
     #         }, status=status.HTTP_200_OK)
     #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def create(self, request):
-        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer = self.serializer_class(
+            data=request.data, context={'request': request})
         if serializer.is_valid():
             user = serializer.validated_data['user']
             _, token = AuthToken.objects.create(user)
             return Response({
-                'user': UserSerializer(user).data, 
+                'user': UserSerializer(user).data,
                 'token': token
             }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -96,11 +103,61 @@ class UsersViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get', 'patch', 'put'], permission_classes=[IsAuthenticated])
     def current(self, request):
         if request.method in ['PATCH', 'PUT']:
-            serializer = self.get_serializer(request.user, data=request.data, partial=True)
+            serializer = self.get_serializer(
+                request.user, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            
+
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
+
+
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+
+        try:
+            user = User.objects.get(email=email)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+
+            # Frontend URL where the user will reset their password
+            reset_url = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
+
+            send_mail(
+                subject="Reset Your Password",
+                message=f"Click the link below to reset your password:\n\n{reset_url}\n\nIf you did not request this, please ignore this email.",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=False,
+            )
+        except User.DoesNotExist:
+            # Silence error to prevent email enumeration attacks
+            pass
+
+        return Response(
+            {"detail": "If an account with that email exists, a password reset link has been sent.\nPlease check your inbox."},
+            status=status.HTTP_200_OK
+        )
+
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data['user']
+        new_password = serializer.validated_data['new_password']
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response({"detail": "Password reset successfully. You can now log in."}, status=status.HTTP_200_OK)

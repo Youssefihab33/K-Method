@@ -23,6 +23,9 @@ const Enroll = lazy(() => import('./components/Enroll'));
 const CourseDetail = lazy(() => import('./components/CourseDetail'));
 const Session = lazy(() => import('./components/Session'));
 
+const ForgotPassword = lazy(() => import('./components/ForgotPassword'));
+const ResetPassword = lazy(() => import('./components/ResetPassword'));
+
 const PageLoader = () => (
     <LoadingSpinner />
 );
@@ -37,15 +40,18 @@ export default function App() {
                     <Routes>
                         {/* Public Routes */}
                         <Route path='/' element={<Homepage />} />
-                        <Route path='/login/' element={<Login />} />
-                        <Route path='/register/' element={<Register />} />
                         <Route path='/course/:id' element={<CourseDetail />} />
                         <Route path='/enroll/:id' element={<Enroll />} />
 
+                        <Route path='/login/' element={<Login />} />
+                        <Route path='/register/' element={<Register />} />
+                        <Route path="/forgot-password" element={<ForgotPassword />} />
+                        <Route path="/reset-password/:uidb64/:token" element={<ResetPassword />} />
+
                         {/* Protected Routes */}
                         {/* <ProtectedRoute> */}
-                            <Route path='/profile' element={<Profile />} />
-                            <Route path="/session/:course_id/:chapter_number/:session_number" element={<Session />} />
+                        <Route path='/profile' element={<Profile />} />
+                        <Route path="/session/:course_id/:chapter_number/:session_number" element={<Session />} />
                         {/* </ProtectedRoute> */}
                         {/* Fallback */}
                         <Route path="*" element={<NotFound to="/notfound" replace />} />

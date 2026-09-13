@@ -75,6 +75,10 @@ export default function Login() {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
             <Box textAlign="center">
+              <Link component={RouterLink} to="/forgot-password" variant="body2" color="text.secondary">
+                Forgot Password?
+              </Link>
+              <br/>
               <Link component={RouterLink} to="/register" variant="body2" color="text.secondary">
                 Don't have an account? Register
               </Link>
