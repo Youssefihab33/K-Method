@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from knox.models import AuthToken  # type: ignore
 
 from .models import School, EmailVerificationCode
-from .serializers import SchoolSerializer, LoginSerializer, RegisterSerializer, UserSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer
+from .serializers import SchoolSerializer, LoginSerializer, RegisterSerializer, UserSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer, ChangePasswordSerializer
 User = get_user_model()
 
 # def send_email(subject, template, user, btnLink=""):
@@ -93,6 +93,23 @@ class RegisterViewSet(viewsets.ViewSet):
                 'user': UserSerializer(user).data,
                 'token': token
             }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = ChangePasswordSerializer(
+            data=request.data, context={'request': request})
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"detail": "Password updated successfully."},
+                status=status.HTTP_200_OK
+            )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
