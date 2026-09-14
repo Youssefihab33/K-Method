@@ -29,10 +29,11 @@ export default function Navbar() {
                         </Button>
                         {isAuthenticated ? (
                             <>
-                                {/* <Button color="primary" component={RouterLink} to="/dashboard">
-                                    Dashboard
-                                </Button> */}
-
+                                {isStaff && 
+                                    <Button color="primary" component={RouterLink} to="/admin">
+                                        Admin
+                                    </Button>
+                                }
                                 <IconButton onClick={handleMenu} sx={{ p: 0 }}>
                                     <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}>
                                         {user?.first_name?.[0] || user?.email?.[0]?.toUpperCase()}
@@ -40,7 +41,6 @@ export default function Navbar() {
                                 </IconButton>
                                 <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
                                     <MenuItem onClick={() => { handleClose(); navigate('/profile'); }}>Profile</MenuItem>
-                                    {isStaff && <MenuItem onClick={() => { handleClose(); navigate('/auth/admin'); }}>Admin</MenuItem>}
                                     <MenuItem onClick={handleLogout}>Logout</MenuItem>
                                 </Menu>
                             </>
