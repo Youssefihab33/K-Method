@@ -5,6 +5,9 @@ const backendUrl = import.meta.env?.VITE_BACKEND_URL || '';
 const axiosClient = axios.create({
 	// Ensure the baseURL always has a trailing slash for Django/DRF compatibility
 	baseURL: backendUrl.endsWith('/') ? backendUrl : `${backendUrl}/`,
+	withCredentials: true,
+	xsrfCookieName: 'csrftoken',
+	xsrfHeaderName: 'X-CSRFToken',
 	headers: {
 		'Content-Type': 'application/json',
 	},
@@ -15,7 +18,7 @@ axiosClient.interceptors.request.use(
 	(config) => {
 		const token = localStorage.getItem('token');
 		if (token) {
-      const cleanToken = token.replace(/['"]+/g, '');
+			const cleanToken = token.replace(/['"]+/g, '');
 			config.headers.Authorization = `Token ${cleanToken}`;
 		}
 		return config;
@@ -35,7 +38,7 @@ axiosClient.interceptors.response.use(
 				window.location.href = '/login';
 			}
 		}
-    if (error.code === 'ECONNABORTED') {
+		if (error.code === 'ECONNABORTED') {
 			console.error('Request timed out. Please check your connection.');
 		}
 		return Promise.reject(error);
