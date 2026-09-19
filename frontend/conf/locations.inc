@@ -5,7 +5,7 @@ location / {
 }
 
 location /api/ {
-    proxy_pass http://backend:80/;
+    proxy_pass http://backend:8001/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -14,7 +14,7 @@ location /api/ {
 }
 
 location /admin/ {
-    proxy_pass http://backend:80/admin/;
+    proxy_pass http://backend:8001/admin/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

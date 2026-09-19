@@ -82,7 +82,7 @@ class Session(models.Model):
     number = models.FloatField()
     name = models.CharField(max_length=250)
     notes = models.TextField(blank=True, default="")
-    video_file = models.FileField(upload_to=rename_sessions, blank=True, null=True)
+    video_file = models.FileField(upload_to=rename_sessions, blank=True, null=True, max_length=1024)
     duration_minutes = models.PositiveIntegerField(default=0)
 
     class Meta:

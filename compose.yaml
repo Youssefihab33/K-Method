@@ -18,31 +18,31 @@ services:
     build: ./frontend
     ports:
       - '81:80'
-      # - '443:443'
+      - '443:443'
     volumes:
       - ./frontend/conf/:/etc/nginx/conf.d/
 
       - django_static:/usr/src/data/static:ro
       - ./data/media:/usr/src/data/media:ro
 
- #     - ./data/certbot/conf:/etc/letsencrypt              # Certbot configs and certificates
- #     - ./data/certbot/www:/var/www/certbot:ro            # webroot for Certbot challenges
+      - ./data/certbot/conf:/etc/letsencrypt              # Certbot configs and certificates
+      - ./data/certbot/www:/var/www/certbot:ro            # webroot for Certbot challenges
     env_file: 'frontend/.env.production'
     restart: always
     depends_on:
       - backend
 
-  # certbot:
-  #   image: certbot/certbot
-  #   volumes:
-  #     - ./data/certbot/conf:/etc/letsencrypt              # Same volume as Nginx for certificates
-  #     - ./data/certbot/www:/var/www/certbot               # Same volume as Nginx for webroot challenges
-  #   dns:
-  #     - 8.8.8.8
-  #     - 8.8.4.4
-  #   # Use --staging for testing (in the command below) to avoid hitting Let's Encrypt rate limits
-  #   # Remove --staging for producing certificates
-  #   command: certonly --webroot -w /var/www/certbot --email youssefihab33@gmail.com --agree-tos --no-eff-email -d simsy.redirectme.net
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt              # Same volume as Nginx for certificates
+      - ./data/certbot/www:/var/www/certbot               # Same volume as Nginx for webroot challenges
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+     # Use --staging for testing (in the command below) to avoid hitting Let's Encrypt rate limits
+     # Remove --staging for producing certificates
+    command: certonly --webroot -w /var/www/certbot --email youssefihab33@gmail.com --agree-tos --no-eff-email -d k-method.ddns.net
 
 volumes:
   django_static:
