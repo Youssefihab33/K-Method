@@ -6,7 +6,7 @@ class SessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Session
         fields = ['id', 'chapter', 'number', 'name',
-                  'notes', 'video_file', 'duration_minutes']
+                  'notes', 'video_file', 'document_file', 'duration_minutes']
 
 
 class ChapterSerializer(serializers.ModelSerializer):
