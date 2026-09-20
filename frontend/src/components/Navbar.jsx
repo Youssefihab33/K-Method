@@ -29,8 +29,8 @@ export default function Navbar() {
                         </Button>
                         {isAuthenticated ? (
                             <>
-                                {isStaff && 
-                                    <Button color="primary" component={RouterLink} to="/admin">
+                                {isStaff &&
+                                    <Button color="primary" onClick={() => { window.location.href = "/admin/" }}>
                                         Admin
                                     </Button>
                                 }
