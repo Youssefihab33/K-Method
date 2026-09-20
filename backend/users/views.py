@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model
+from django.http import JsonResponse
 from django.conf import settings
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
+from django.views.decorators.csrf import ensure_csrf_cookie
 from .email import send_html_email
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import status, viewsets
@@ -15,39 +17,9 @@ from .models import School, EmailVerificationCode
 from .serializers import SchoolSerializer, LoginSerializer, RegisterSerializer, UserSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer, ChangePasswordSerializer
 User = get_user_model()
 
-# def send_email(subject, template, user, btnLink=""):
-#     context = {
-#         'name': user.email,
-#         'email': user.email,
-#         'year': datetime.now().year,
-#         'button_link': btnLink,
-#         'link_to_[APP_NAME]': os.getenv('FRONTEND_DOMAIN'),
-#         'admin_email': os.getenv('EMAIL_HOST'),
-#     }
-#     html_content = render_to_string(template, context)
-#     plain_message = strip_tags(html_content)
-#     message = EmailMultiAlternatives(
-#         subject=subject,
-#         body=plain_message,
-#         from_email=None,
-#         to=[user.email],
-#     )
-#     message.attach_alternative(html_content, "text/html")
-#     message.send()
-
-
-# @receiver(reset_password_token_created)
-# def password_reset_token_created(reset_password_token, *args, **kwargs):
-#     token_url = f'{os.getenv("FRONTEND_DOMAIN")}reset-password/{reset_password_token.key}'
-#     send_email("Forgot your Password? - [APP_NAME]",
-#                'email/forgot_password.html', reset_password_token.user, token_url)
-
-
-# @receiver(post_password_reset)
-# def password_reset(sender, **kwargs):
-#     send_email("Password Changed Successfully - [APP_NAME]",
-#                # A DO LATER HERE
-#                'email/password_changed.html', kwargs['user'], 'DO LATER')
+@ensure_csrf_cookie
+def init_session(request):
+    return JsonResponse({"detail": "CSRF cookie set."})
 
 # Create your views here.
 class LoginViewSet(viewsets.ViewSet):

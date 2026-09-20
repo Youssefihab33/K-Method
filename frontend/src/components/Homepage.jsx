@@ -105,8 +105,8 @@ export default function Homepage() {
                     </Typography>
 
                     <Grid container spacing={3}>
-                        {user.student_profile.enrolled_courses.length > 0 ?
-                            user.student_profile.enrolled_courses.map(course => (
+                        {user.student_profile?.enrolled_courses?.length > 0 ?
+                            user.student_profile?.enrolled_courses?.map(course => (
                                 <Grid xs={12} sm={6} md={4} key={course.id}>
                                     <CourseCard course={course} />
                                 </Grid>

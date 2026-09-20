@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -19,12 +19,73 @@ import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
-import { VideoPlayer, VideoSkin, Video } from '@videojs/react/video';
-import '@videojs/react/video/skin.css';
+import videojs from 'video.js';
+import 'video.js/dist/video-js.css';
 
 import { useTitle } from 'react-use';
 import { courseService } from '../api/courseService';
 import { useAuth } from '../context/AuthContext';
+
+// Helper Component for Video.js Instance Management
+function CustomVideoPlayer({ src }) {
+    const videoRef = useRef(null);
+    const playerRef = useRef(null);
+
+    useEffect(() => {
+        // Ensure player is initialized only once
+        if (!playerRef.current && videoRef.current) {
+            const videoElement = document.createElement('video-js');
+            videoElement.classList.add('vjs-big-play-centered');
+            videoRef.current.appendChild(videoElement);
+
+            const player = (playerRef.current = videojs(
+                videoElement,
+                {
+                    controls: true,
+                    autoplay: false,
+                    preload: 'auto',
+                    responsive: true,
+                    fluid: true,
+                    playbackRates: [0.5, 1, 1.25, 1.5, 2],
+                    sources: [
+                        {
+                            src: src,
+                            type: src.endsWith('.m3u8') ? 'application/x-mpegURL' : 'video/mp4',
+                        },
+                    ],
+                },
+                () => {
+                    videojs.log('player is ready');
+                }
+            ));
+            console.log(player)
+        } else if (playerRef.current) {
+            // Update source if src prop changes
+            const player = playerRef.current;
+            player.src({
+                src: src,
+                type: src.endsWith('.m3u8') ? 'application/x-mpegURL' : 'video/mp4',
+            });
+        }
+
+    }, [src]);
+
+    // Cleanup player instance on component unmount
+    useEffect(() => {
+        const player = playerRef.current;
+        return () => {
+            if (player && !player.isDisposed()) {
+                player.dispose();
+                playerRef.current = null;
+            }
+        };
+    }, []);
+    return (
+        <div data-vjs-player style={{ width: '100%', height: '100%' }}>
+            <div ref={videoRef} style={{ width: '100%', height: '100%' }} />
+        </div>
+    );
+}
 
 export default function Session() {
     const { course_id, chapter_number, session_number } = useParams();
@@ -198,20 +259,15 @@ export default function Session() {
                         position: 'relative',
                         userSelect: 'none',
                         display: 'block',
-                        '& video-player, & media-player': {
+                        '& .video-js': {
                             width: '100%',
                             height: '100%',
-                            display: 'block',
                         },
                     }}
                     onContextMenu={handleContextMenu}
                 >
                     {videoSource ? (
-                        <VideoPlayer key={videoSource}>
-                            <VideoSkin>
-                                <Video src={videoSource} controls playsInline />
-                            </VideoSkin>
-                        </VideoPlayer>
+                        <CustomVideoPlayer key={videoSource} src={videoSource} />
                     ) : (
                         <Box
                             sx={{

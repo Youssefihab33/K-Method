@@ -142,7 +142,17 @@ MEDIA_ROOT = BASE_DIR.parent / 'data' / 'media'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1572864000  # 1500 MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 1572864000
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",       # Make sure DRF allows this header through CORS
+    "x-requested-with",
+]
+
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = True
 
 # Django REST Framework Configuration
 REST_FRAMEWORK = {

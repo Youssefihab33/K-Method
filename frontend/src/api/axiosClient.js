@@ -6,6 +6,7 @@ const axiosClient = axios.create({
 	// Ensure the baseURL always has a trailing slash for Django/DRF compatibility
 	baseURL: backendUrl.endsWith('/') ? backendUrl : `${backendUrl}/`,
 	withCredentials: true,
+	withXSRFToken: true,
 	xsrfCookieName: 'csrftoken',
 	xsrfHeaderName: 'X-CSRFToken',
 	headers: {
