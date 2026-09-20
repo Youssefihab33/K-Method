@@ -59,7 +59,6 @@ function CustomVideoPlayer({ src }) {
                     videojs.log('player is ready');
                 }
             ));
-            console.log(player)
         } else if (playerRef.current) {
             // Update source if src prop changes
             const player = playerRef.current;

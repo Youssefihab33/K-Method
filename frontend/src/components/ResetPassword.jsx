@@ -39,7 +39,6 @@ export default function ResetPassword() {
         try {
             setMessage('');
             const response = await authService.passwordResetConfirmation(uidb64, token, password);
-            console.log(response)
             setMessage(response.detail);
             setSuccess(true);
             setTimeout(() => navigate('/login'), 3000);
