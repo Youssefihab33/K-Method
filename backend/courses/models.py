@@ -62,7 +62,7 @@ class Chapter(models.Model):
         on_delete=models.CASCADE,
         related_name='chapters'
     )
-    number = models.FloatField()
+    number = models.IntegerField()
     name = models.CharField(max_length=250)
 
     class Meta:
@@ -79,7 +79,7 @@ class Session(models.Model):
         on_delete=models.CASCADE,
         related_name='sessions'
     )
-    number = models.FloatField()
+    number = models.IntegerField()
     name = models.CharField(max_length=250)
     notes = models.TextField(blank=True, default="")
     video_file = models.FileField(upload_to=rename_sessions, blank=True, null=True, max_length=1024)
