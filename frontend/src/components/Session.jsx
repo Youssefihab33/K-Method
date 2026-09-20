@@ -21,6 +21,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
+import PDFObject from 'pdfobject';
 
 import { useTitle } from 'react-use';
 import { courseService } from '../api/courseService';
@@ -95,6 +96,7 @@ export default function Session() {
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const PDFRef = useRef(null);
 
     const chapIdx = parseInt(chapter_number, 10) - 1;
     const sessIdx = parseInt(session_number, 10) - 1;
@@ -149,6 +151,32 @@ export default function Session() {
     }, [course]);
 
     const videoSource = currentSession?.video_file || currentSession?.video_url;
+
+    useEffect(() => {
+        // Basic verification that both our file URL and DOM container exist
+        if (currentSession?.document_file && PDFRef.current) {
+            const options = {
+                pdfOpenParams: {
+                    view: 'FitV',
+                    pagemode: 'thumbs',
+                    page: 1
+                },
+                // Custom mobile-friendly fallback message
+                fallbackLink: `
+          <div style="padding: 20px; background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; text-align: center; border-radius: 4px; margin: 20px;">
+            Your browser does not support inline PDFs. 
+            <a href="[url]" target="_blank" rel="noopener noreferrer" style="color: #533f03; font-weight: bold; text-decoration: underline;">
+              Click here to download and view the PDF
+            </a>.
+          </div>
+        `
+            };
+
+            // Embed the PDF directly onto the DOM element referenced by the ref
+            PDFObject.embed(currentSession.document_file, PDFRef.current, options);
+        }
+    }, [currentSession?.document_file]); // Automatically re-runs and swaps out the file if the 'url' prop changes
+
 
     // Find index of current session within the flattened list
     const currentIndex = allSessionsSequence.findIndex(
@@ -251,56 +279,61 @@ export default function Session() {
             {/* Main Video Display Card */}
             <Card sx={{ mb: 4, backgroundColor: 'rgba(21, 24, 33, 0.95)', overflow: 'hidden' }}>
                 {/* Video.js Player Container */}
-                <Box
-                    sx={{
-                        width: '100%',
-                        aspectRatio: '16/9',
-                        backgroundColor: '#000',
-                        position: 'relative',
-                        userSelect: 'none',
-                        display: 'block',
-                        '& .video-js': {
+                {currentSession.video_file &&
+                    <Box
+                        sx={{
                             width: '100%',
-                            height: '100%',
-                        },
-                    }}
-                    onContextMenu={handleContextMenu}
-                >
-                    {videoSource ? (
-                        <CustomVideoPlayer key={videoSource} src={videoSource} />
-                    ) : (
-                        <Box
-                            sx={{
+                            aspectRatio: '16/9',
+                            backgroundColor: '#000',
+                            position: 'relative',
+                            userSelect: 'none',
+                            display: 'block',
+                            '& .video-js': {
                                 width: '100%',
                                 height: '100%',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                            }}
-                        >
-                            <Typography color="text.secondary">
-                                No video source attached to this session.
-                            </Typography>
-                        </Box>
-                    )}
-                </Box>
+                            },
+                        }}
+                        onContextMenu={handleContextMenu}
+                    >
+                        <CustomVideoPlayer key={videoSource} src={videoSource} />
+                    </Box>
+                }
 
                 <CardContent sx={{ p: 4 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    <Typography variant="h4" sx={{ color: 'primary.dark', fontWeight: 'bold', mb: 1 }}>
                         {session_number}. {currentSession.title || currentSession.name}
                     </Typography>
                     <Typography variant="subtitle1" color="primary.main" gutterBottom sx={{ fontWeight: 600 }}>
                         Chapter {chapter_number}: {currentChapter?.title || currentChapter?.name}
                     </Typography>
 
-                    {currentSession.description && (
+                    {currentSession.notes && (
                         <>
-                            <Divider sx={{ my: 2 }} />
-                            <Typography variant="body1" color="text.secondary">
-                                {currentSession.description}
+                            <Typography variant="h5" sx={{ color: 'primary.main', marginTop: 4, marginBottom: 1 }}>
+                                Note:
+                            </Typography>
+                            <Typography variant="body1" color="secondary">
+                                {currentSession.notes}
                             </Typography>
                         </>
                     )}
+
+                    {currentSession.document_file &&
+                        <>
+                            <Divider sx={{ my: 2 }} />
+                            <div style={{ width: '100%', maxWidth: '1000px', margin: '20px auto' }}>
+                                <div
+                                    ref={PDFRef}
+                                    style={{
+                                        width: '100%',
+                                        height: '750px',
+                                        border: '1px solid #ccc',
+                                        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)'
+                                    }}
+                                />
+                            </div>
+                        </>
+                    }
                 </CardContent>
             </Card>
 
