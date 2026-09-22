@@ -1,8 +1,16 @@
 import datetime, os
 from django.db import models
+from django.core.files.storage import FileSystemStorage
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from moviepy import VideoFileClip
+
+class OverwriteStorage(FileSystemStorage):
+    def get_available_name(self, name, max_length=None):
+        # If the file already exists, remove it before saving the new one
+        if self.exists(name):
+            os.remove(os.path.join(self.location, name))
+        return super().get_available_name(name, max_length)
 
 def rename_sessions(instance, filename):
     ext = filename.split('.')[-1]
@@ -35,7 +43,7 @@ class Course(models.Model):
         default=current_year,
         help_text='Use a valid year (e.g., 2025)'
     )
-    image = models.ImageField(upload_to=rename_course_images, blank=True, null=True)
+    image = models.ImageField(upload_to=rename_course_images, storage=OverwriteStorage(), blank=True, null=True)
     price = models.PositiveIntegerField(default=0)
     about = models.TextField(blank=True, default="")
     tutor = models.ForeignKey(
@@ -82,8 +90,8 @@ class Session(models.Model):
     number = models.IntegerField()
     name = models.CharField(max_length=250)
     notes = models.TextField(blank=True, default="")
-    video_file = models.FileField(upload_to=rename_sessions, blank=True, null=True, max_length=1024)
-    document_file = models.FileField(upload_to=rename_sessions, blank=True, null=True, max_length=512)
+    video_file = models.FileField(upload_to=rename_sessions, storage=OverwriteStorage(), blank=True, null=True, max_length=1024)
+    document_file = models.FileField(upload_to=rename_sessions, storage=OverwriteStorage(), blank=True, null=True, max_length=512)
     duration_minutes = models.PositiveIntegerField(default=0)
 
     class Meta:
